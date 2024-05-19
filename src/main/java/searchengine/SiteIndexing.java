@@ -1,6 +1,4 @@
 package searchengine;
-
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
