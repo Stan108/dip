@@ -1,6 +1,8 @@
 package searchengine.model;
 import lombok.Data;
 import javax.persistence.*;
+import javax.persistence.Index;
+
 @Data
 @Entity
 @Table(name = "Search_page", indexes = {@Index(name = "Path_INDX", columnList = "path")})

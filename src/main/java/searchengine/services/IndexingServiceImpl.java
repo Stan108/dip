@@ -57,6 +57,14 @@ public class IndexingServiceImpl implements IndexingService{
 
     @Override
     public ResponseService startIndexingOne(String url) {
-        return null;
+        ResponseService resp;
+        String response;
+        response = index.checkedSiteIndexing(url);
+        resp = switch (response) {
+            case "not found" -> new FalseResponseService("Не найдено");
+            case "false" -> new FalseResponseService("Индексация не запущена");
+            default -> new TrueResponseService();
+        };
+        return resp;
     }
 }

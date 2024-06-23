@@ -2,9 +2,7 @@ package searchengine.controllers;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import searchengine.dto.statistics.StatisticsResponse;
 import searchengine.responces.ResponseService;
 import searchengine.services.IndexingService;
@@ -32,6 +30,13 @@ public class ApiController {
     @GetMapping("/stopIndexing")
     ResponseEntity<ResponseService> stopIndexing() {
         ResponseService response = index.stopIndexingAll();
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/indexPage")
+    ResponseEntity<ResponseService> startIndexingOne(@RequestParam(name = "url",
+    required = false, defaultValue = " ") String url) {
+        ResponseService response = index.startIndexingOne(url);
         return ResponseEntity.ok(response);
     }
 }

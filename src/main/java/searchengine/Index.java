@@ -6,9 +6,7 @@ import org.apache.juli.logging.LogFactory;
 import org.springframework.stereotype.Component;
 import searchengine.model.IndexingStatus;
 import searchengine.model.Site;
-import searchengine.services.CleanupService;
-import searchengine.services.PageRepositoryService;
-import searchengine.services.SiteRepositoryService;
+import searchengine.services.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -18,6 +16,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+
 @Component
 @RequiredArgsConstructor
 public class Index {
@@ -26,6 +25,8 @@ public class Index {
     private final SearchSettings searchSettings;
     private final SiteRepositoryService siteRepositoryService;
     private final PageRepositoryService pageRepositoryService;
+    private final LemmaRepositoryService lemmaRepositoryService;
+    private final IndexRepositoryService indexRepositoryService;
 
     Log log = LogFactory.getLog(Index.class);
 
@@ -47,7 +48,8 @@ public class Index {
         if (site1 == null) {
             siteRepositoryService.save(site);
             SiteIndexing indexing = new SiteIndexing(site, searchSettings,
-                                    siteRepositoryService, pageRepositoryService, true);
+                                    siteRepositoryService, pageRepositoryService,
+                    lemmaRepositoryService,indexRepositoryService, true);
             executor.execute(indexing);
             return true;
         } else {
@@ -58,7 +60,7 @@ public class Index {
                         searchSettings,
                         siteRepositoryService,
                         pageRepositoryService,
-                        true);
+                        lemmaRepositoryService, indexRepositoryService,true);
                 executor.execute(indexing);
                 return true;
             } else {
@@ -101,4 +103,29 @@ public class Index {
         }
         return isThreadAlive;
     }
-}
+
+    public String checkedSiteIndexing(String url) {
+        List<Site> siteList = siteRepositoryService.getAllSites();
+        String baseUrl = "";
+        for (Site site : siteList) {
+            if (site.getStatus() != IndexingStatus.INDEXED) {
+                return "false";
+            }
+            if (url.contains(site.getUrl())) {
+                baseUrl = site.getUrl();
+            }
+        }
+            if (baseUrl.isEmpty()) {
+                return "not found";
+            } else {
+                Site site = siteRepositoryService.getSite(baseUrl);
+                site.setUrl(url);
+                SiteIndexing indexing = new SiteIndexing(
+                        siteRepositoryService.getSite(url), searchSettings,
+                        siteRepositoryService, pageRepositoryService, lemmaRepositoryService,indexRepositoryService,false
+                );
+            }
+        return "true";
+        }
+    }
+
