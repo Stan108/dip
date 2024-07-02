@@ -6,6 +6,9 @@ import org.apache.juli.logging.LogFactory;
 import org.springframework.stereotype.Component;
 import searchengine.model.IndexingStatus;
 import searchengine.model.Site;
+import searchengine.responces.FalseResponseService;
+import searchengine.responces.ResponseService;
+import searchengine.responces.TrueResponseService;
 import searchengine.services.*;
 
 import java.time.LocalDateTime;
@@ -15,7 +18,6 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-
 
 @Component
 @RequiredArgsConstructor
@@ -48,7 +50,7 @@ public class Index {
         if (site1 == null) {
             siteRepositoryService.save(site);
             SiteIndexing indexing = new SiteIndexing(site, searchSettings,
-                                    siteRepositoryService, pageRepositoryService,
+                    siteRepositoryService, pageRepositoryService,
                     lemmaRepositoryService,indexRepositoryService, true);
             executor.execute(indexing);
             return true;
@@ -94,38 +96,73 @@ public class Index {
         } catch (InterruptedException e) {
             log.error("ошибка остановки потоков " + e);
         }
-        if (isThreadAlive) {
-            List<Site> siteList = siteRepositoryService.getAllSites();
-            siteList.forEach(site -> {
-                 site.setStatus(IndexingStatus.FAILED);
-                 siteRepositoryService.save(site);
-            });
+        if (!isThreadAlive) {
+            executor.shutdownNow();
         }
-        return isThreadAlive;
+
+        List<Site> siteList = siteRepositoryService.getAllSites();
+        siteList.forEach(site -> {
+            site.setStatus(IndexingStatus.FAILED);
+            siteRepositoryService.save(site);
+        });
+
+        return !isThreadAlive;
     }
 
     public String checkedSiteIndexing(String url) {
         List<Site> siteList = siteRepositoryService.getAllSites();
         String baseUrl = "";
         for (Site site : siteList) {
-            if (site.getStatus() != IndexingStatus.INDEXED) {
-                return "false";
-            }
             if (url.contains(site.getUrl())) {
                 baseUrl = site.getUrl();
+                break;
             }
         }
-            if (baseUrl.isEmpty()) {
-                return "not found";
-            } else {
-                Site site = siteRepositoryService.getSite(baseUrl);
-                site.setUrl(url);
-                SiteIndexing indexing = new SiteIndexing(
-                        siteRepositoryService.getSite(url), searchSettings,
-                        siteRepositoryService, pageRepositoryService, lemmaRepositoryService,indexRepositoryService,false
-                );
-            }
-        return "true";
+
+        if (baseUrl.isEmpty()) {
+            return "not found";
+        } else {
+            Site site = siteRepositoryService.getSite(baseUrl);
+            site.setStatus(IndexingStatus.INDEXING);
+            site.setStatusTime(LocalDateTime.now());
+            siteRepositoryService.save(site);
+
+            SiteIndexing indexing = new SiteIndexing(
+                    site, searchSettings,
+                    siteRepositoryService, pageRepositoryService,
+                    lemmaRepositoryService, indexRepositoryService, false);
+            executor.execute(indexing);
+
+            return "true";
         }
     }
 
+    public ResponseService startIndexingOne(String url) {
+        List<Site> siteList = siteRepositoryService.getAllSites();
+        String baseUrl = "";
+        for (Site site : siteList) {
+            if (url.contains(site.getUrl())) {
+                baseUrl = site.getUrl();
+                break;
+            }
+        }
+
+        if (baseUrl.isEmpty()) {
+//            return new ResponseService(false, "Данная страница находится за пределами сайтов, указанных в конфигурационном файле");
+            return new FalseResponseService("Данная страница находится за пределами сайтов, указанных в конфигурационном файле");
+        }
+
+        Site site = siteRepositoryService.getSite(baseUrl);
+        site.setStatus(IndexingStatus.INDEXING);
+        site.setStatusTime(LocalDateTime.now());
+        siteRepositoryService.save(site);
+
+        SiteIndexing indexing = new SiteIndexing(
+                site, searchSettings,
+                siteRepositoryService, pageRepositoryService,
+                lemmaRepositoryService, indexRepositoryService, false);
+        executor.execute(indexing);
+
+        return new TrueResponseService();
+    }
+}

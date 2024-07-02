@@ -64,8 +64,8 @@ public class SiteIndexing extends Thread{
         siteRepositoryService.save(site);
         try {
             Page page = getSearchPage(searchUrl, site.getUrl(), site.getId());
-            processPage(page);
             pageRepositoryService.save(page);
+            processPage(page);
         } catch (IOException e) {
             site.setLastError("Ошибка чтения странцы: " + searchUrl + "\n" + e.getMessage());
             site.setStatus(IndexingStatus.FAILED);
