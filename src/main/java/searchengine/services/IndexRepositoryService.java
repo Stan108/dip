@@ -9,4 +9,5 @@ public interface IndexRepositoryService {
     void deleteAllIndexing(List<Index> indexingList);
     Index getIndexing (int lemmaId, int pageId);
     void save(Index indexing);
+    void deleteAll();
 }

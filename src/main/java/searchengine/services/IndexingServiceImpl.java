@@ -61,8 +61,9 @@ public class IndexingServiceImpl implements IndexingService{
         String response;
         response = index.checkedSiteIndexing(url);
         resp = switch (response) {
-            case "not found" -> new FalseResponseService("Не найдено");
-            case "false" -> new FalseResponseService("Индексация не запущена");
+            case "not found" -> new FalseResponseService("Страница находится за пределами сайтов,\" +\n" +
+                    "                    \" указанных в конфигурационном файле");
+            case "false" -> new FalseResponseService("Индексация страницы уже запущена");
             default -> new TrueResponseService();
         };
         return resp;

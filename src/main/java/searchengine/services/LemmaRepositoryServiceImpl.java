@@ -53,6 +53,11 @@ public class LemmaRepositoryServiceImpl implements LemmaRepositoryService{
 
         return lemmaRepository.findByIdIn(lemmaIdList);
     }
+
+    @Override
+    public void deleteAll() {
+        lemmaRepository.deleteAll();
+    }
 }
 //    private final LemmaRepository lemmaRepository;
 //    @Override

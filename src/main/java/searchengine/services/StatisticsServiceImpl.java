@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import static searchengine.model.IndexingStatus.INDEXED;
+
 @Service
 @RequiredArgsConstructor
 public class StatisticsServiceImpl implements StatisticsService {
@@ -22,7 +24,9 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     private final Random random = new Random();
     private final SitesList sites;
-
+    private final SiteRepositoryService siteRepositoryService;
+    private final LemmaRepositoryService lemmaRepositoryService;
+    private final PageRepositoryService pageRepositoryService;
     @Override
     public StatisticsResponse getStatistics() {
         String[] statuses = { "INDEXED", "FAILED", "INDEXING" };
@@ -40,19 +44,23 @@ public class StatisticsServiceImpl implements StatisticsService {
         List<Site> sitesList = sites.getSites();
         for(int i = 0; i < sitesList.size(); i++) {
             Site site = sitesList.get(i);
+            searchengine.model.Site site1 = siteRepositoryService.getSite(site.getUrl());
             DetailedStatisticsItem item = new DetailedStatisticsItem();
             item.setName(site.getName());
             item.setUrl(site.getUrl());
-            int pages = random.nextInt(1_000);
-            int lemmas = pages * random.nextInt(1_000);
-            item.setPages(pages);
-            item.setLemmas(lemmas);
-            item.setStatus(statuses[i % 3]);
+//            int pages = random.nextInt(1_000);
+            long pages = pageRepositoryService.pageCount(site1.getId());
+//            int lemmas = pages * random.nextInt(1_000);
+            long lemmas = lemmaRepositoryService.lemmaCount(site1.getId());
+            item.setPages((int) pages);
+            item.setLemmas((int) lemmas);
+//            item.setStatus(statuses[i % 3]);
+            item.setStatus(site1.getStatus().name());
             item.setError(errors[i % 3]);
             item.setStatusTime(System.currentTimeMillis() -
                     (random.nextInt(10_000)));
-            total.setPages(total.getPages() + pages);
-            total.setLemmas(total.getLemmas() + lemmas);
+            total.setPages((int) (total.getPages() + pages));
+            total.setLemmas((int) (total.getLemmas() + lemmas));
             detailed.add(item);
         }
 
@@ -63,5 +71,15 @@ public class StatisticsServiceImpl implements StatisticsService {
         response.setStatistics(data);
         response.setResult(true);
         return response;
+    }
+    private boolean isSitesIndexing(){
+        boolean is = true;
+        for(searchengine.model.Site s : siteRepositoryService.getAllSites()){
+            if(!s.getStatus().equals(INDEXED)){
+                is = false;
+                break;
+            }
+        }
+        return is;
     }
 }

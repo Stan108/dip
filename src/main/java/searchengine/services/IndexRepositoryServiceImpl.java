@@ -40,4 +40,9 @@ public class IndexRepositoryServiceImpl implements IndexRepositoryService{
     public void save(Index indexing) {
         indexRepository.save(indexing);
     }
+
+    @Override
+    public void deleteAll() {
+        indexRepository.deleteAll();
+    }
 }

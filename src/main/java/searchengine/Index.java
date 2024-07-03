@@ -34,6 +34,7 @@ public class Index {
 
     public boolean allSiteIndexing() {
         cleanupService.clearAllData();
+
         boolean isIndexing;
         List<Site> siteList = getSites();
         for (Site site : siteList) {
@@ -123,46 +124,23 @@ public class Index {
             return "not found";
         } else {
             Site site = siteRepositoryService.getSite(baseUrl);
+            site.setUrl(url);
             site.setStatus(IndexingStatus.INDEXING);
             site.setStatusTime(LocalDateTime.now());
-            siteRepositoryService.save(site);
+
 
             SiteIndexing indexing = new SiteIndexing(
-                    site, searchSettings,
-                    siteRepositoryService, pageRepositoryService,
-                    lemmaRepositoryService, indexRepositoryService, false);
+                    site,
+                    searchSettings,
+                    siteRepositoryService,
+                    pageRepositoryService,
+                    lemmaRepositoryService,
+                    indexRepositoryService,
+                    false);
             executor.execute(indexing);
-
+            siteRepositoryService.save(site);
             return "true";
         }
     }
 
-    public ResponseService startIndexingOne(String url) {
-        List<Site> siteList = siteRepositoryService.getAllSites();
-        String baseUrl = "";
-        for (Site site : siteList) {
-            if (url.contains(site.getUrl())) {
-                baseUrl = site.getUrl();
-                break;
-            }
-        }
-
-        if (baseUrl.isEmpty()) {
-//            return new ResponseService(false, "Данная страница находится за пределами сайтов, указанных в конфигурационном файле");
-            return new FalseResponseService("Данная страница находится за пределами сайтов, указанных в конфигурационном файле");
-        }
-
-        Site site = siteRepositoryService.getSite(baseUrl);
-        site.setStatus(IndexingStatus.INDEXING);
-        site.setStatusTime(LocalDateTime.now());
-        siteRepositoryService.save(site);
-
-        SiteIndexing indexing = new SiteIndexing(
-                site, searchSettings,
-                siteRepositoryService, pageRepositoryService,
-                lemmaRepositoryService, indexRepositoryService, false);
-        executor.execute(indexing);
-
-        return new TrueResponseService();
-    }
 }

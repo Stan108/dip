@@ -27,8 +27,8 @@ public class SiteIndexing extends Thread{
     private final SearchSettings searchSettings;
     private final SiteRepositoryService siteRepositoryService;
     private final PageRepositoryService pageRepositoryService;
-    private final LemmaRepositoryService lemmaRepository;
-    private final IndexRepositoryService indexRepository;
+    private final LemmaRepositoryService lemmaRepositoryService;
+    private final IndexRepositoryService indexRepositoryService;
     private final boolean allSite;
     Log log = LogFactory.getLog(Index.class);
 
@@ -45,9 +45,8 @@ public class SiteIndexing extends Thread{
     }
 
     private void runAllIndexing() {
-        System.out.println("запуск индексации всех сайтов");
+        site.setStatus(IndexingStatus.INDEXING);
         log.info("запуск индексации всех сайтов");
-//        site.setStatus(IndexingStatus.INDEXING);
         site.setStatusTime(LocalDateTime.now());
         siteRepositoryService.save(site);
         SiteMapBuilder builder = new SiteMapBuilder(site.getUrl(), this.isInterrupted());
@@ -64,6 +63,10 @@ public class SiteIndexing extends Thread{
         siteRepositoryService.save(site);
         try {
             Page page = getSearchPage(searchUrl, site.getUrl(), site.getId());
+            Page checkPage = pageRepositoryService.getPage(searchUrl.replaceAll(site.getUrl(), ""));
+            if (checkPage != null){
+                prepareDbToIndexing(checkPage);
+            }
             pageRepositoryService.save(page);
             processPage(page);
         } catch (IOException e) {
@@ -75,6 +78,8 @@ public class SiteIndexing extends Thread{
         site.setStatus(IndexingStatus.INDEXED);
         siteRepositoryService.save(site);
     }
+
+
 
     private Page getSearchPage(String url, String baseUrl, int siteId) throws IOException {
         Page page = new Page();
@@ -99,29 +104,37 @@ public class SiteIndexing extends Thread{
         // Сохранение лемм и обновление частоты
         for (Map.Entry<String, Integer> entry : lemmas.entrySet()) {
             String lemmaName = entry.getKey();
-            List<Lemma> existingLemmas = lemmaRepository.getLemma(lemmaName);
+            List<Lemma> existingLemmas = lemmaRepositoryService.getLemma(lemmaName);
             Lemma lemma;
             if (existingLemmas.isEmpty()) {
                 lemma = new Lemma(lemmaName, entry.getValue(), page.getSiteId());
-                lemmaRepository.save(lemma);
+                lemmaRepositoryService.save(lemma);
             } else {
                 lemma = existingLemmas.get(0);
                 lemma.setFrequency(lemma.getFrequency() + entry.getValue());
-                lemmaRepository.save(lemma);
+                lemmaRepositoryService.save(lemma);
         }
 
         // Сохранение индексов
-            searchengine.model.Index existingIndex = indexRepository.getIndexing(lemma.getId(), page.getId());
+            searchengine.model.Index existingIndex = indexRepositoryService.getIndexing(lemma.getId(), page.getId());
             if (existingIndex == null) {
                 searchengine.model.Index newIndex = new searchengine.model.Index();
                 newIndex.setPage(page);
                 newIndex.setLemma(lemma);
                 newIndex.setRank(Float.valueOf(entry.getValue()));
-                indexRepository.save(newIndex);
+                indexRepositoryService.save(newIndex);
             } else {
                 existingIndex.setRank(existingIndex.getRank() + entry.getValue());
-                indexRepository.save(existingIndex);
+                indexRepositoryService.save(existingIndex);
             }
         }
+    }
+
+    private void prepareDbToIndexing(Page page) {
+        List<searchengine.model.Index> indexingList = indexRepositoryService.getAllIndexingByPageId(page.getId());
+        List<Lemma> allLemmasIdByPage = lemmaRepositoryService.findLemmasByIndexing(indexingList);
+        lemmaRepositoryService.deleteAllLemmas(allLemmasIdByPage);
+        indexRepositoryService.deleteAllIndexing(indexingList);
+        pageRepositoryService.deletePage(page);
     }
 }
