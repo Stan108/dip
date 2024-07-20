@@ -35,7 +35,7 @@ public class LemmaRepositoryServiceImpl implements LemmaRepositoryService{
     }
 
     @Override
-    public long lemmaCount(long siteId) {
+    public int lemmaCount(int siteId) {
         return lemmaRepository.countBySiteId(siteId);
     }
 

@@ -12,7 +12,7 @@ import java.util.List;
 @Repository
 public interface LemmaRepository extends CrudRepository<Lemma, Integer> {
     List<Lemma> findByLemma(String lemma);
-    long countBySiteId(long siteId);
+    int countBySiteId(int siteId);
     List<Lemma> findByIdIn(int[] ids);
     @Modifying
     @Transactional
