@@ -48,19 +48,17 @@ public class StatisticsServiceImpl implements StatisticsService {
             DetailedStatisticsItem item = new DetailedStatisticsItem();
             item.setName(site.getName());
             item.setUrl(site.getUrl());
-//            int pages = random.nextInt(1_000);
-            long pages = pageRepositoryService.pageCount(site1.getId());
-//            int lemmas = pages * random.nextInt(1_000);
-            long lemmas = lemmaRepositoryService.lemmaCount(site1.getId());
-            item.setPages((int) pages);
-            item.setLemmas((int) lemmas);
-//            item.setStatus(statuses[i % 3]);
-            item.setStatus(site1.getStatus().name());
+            int pages = random.nextInt(1_000);
+            int lemmas = pages * random.nextInt(1_000);
+            item.setPages(pages);
+            item.setLemmas(lemmas);
+            item.setStatus(statuses[i % 3]);
+
             item.setError(errors[i % 3]);
             item.setStatusTime(System.currentTimeMillis() -
                     (random.nextInt(10_000)));
-            total.setPages((int) (total.getPages() + pages));
-            total.setLemmas((int) (total.getLemmas() + lemmas));
+            total.setPages((total.getPages() + pages));
+            total.setLemmas((total.getLemmas() + lemmas));
             detailed.add(item);
         }
 

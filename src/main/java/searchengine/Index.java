@@ -6,6 +6,7 @@ import org.apache.juli.logging.LogFactory;
 import org.springframework.stereotype.Component;
 import searchengine.model.IndexingStatus;
 import searchengine.model.Site;
+import searchengine.repo.SiteRepository;
 import searchengine.responces.FalseResponseService;
 import searchengine.responces.ResponseService;
 import searchengine.responces.TrueResponseService;
@@ -18,6 +19,8 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import static searchengine.model.IndexingStatus.INDEXED;
 
 @Component
 @RequiredArgsConstructor
@@ -52,7 +55,7 @@ public class Index {
             siteRepositoryService.save(site);
             SiteIndexing indexing = new SiteIndexing(site, searchSettings,
                     siteRepositoryService, pageRepositoryService,
-                    lemmaRepositoryService,indexRepositoryService, true);
+                    lemmaRepositoryService, indexRepositoryService, true);
             executor.execute(indexing);
             return true;
         } else {
@@ -63,7 +66,7 @@ public class Index {
                         searchSettings,
                         siteRepositoryService,
                         pageRepositoryService,
-                        lemmaRepositoryService, indexRepositoryService,true);
+                        lemmaRepositoryService, indexRepositoryService, true);
                 executor.execute(indexing);
                 return true;
             } else {
@@ -107,40 +110,139 @@ public class Index {
             siteRepositoryService.save(site);
         });
 
-        return !isThreadAlive;
+        return isThreadAlive;
     }
 
     public String checkedSiteIndexing(String url) {
-        List<Site> siteList = siteRepositoryService.getAllSites();
-        String baseUrl = "";
-        for (Site site : siteList) {
-            if (url.contains(site.getUrl())) {
-                baseUrl = site.getUrl();
-                break;
-            }
+        String baseUrl = getBaseUrlFromConfig(url);
+        if (baseUrl == null) {
+            return "not found";
         }
 
-        if (baseUrl.isEmpty()) {
-            return "not found";
-        } else {
-            Site site = siteRepositoryService.getSite(baseUrl);
-            site.setUrl(url);
+        Site site = siteRepositoryService.findByUrl(baseUrl);
+        if (site == null) {
+            // Создаем новую запись для сайта
+            site = new Site();
+            site.setUrl(baseUrl);
+            site.setName(getSiteNameFromConfig(baseUrl));
             site.setStatus(IndexingStatus.INDEXING);
             site.setStatusTime(LocalDateTime.now());
-
-
-            SiteIndexing indexing = new SiteIndexing(
-                    site,
-                    searchSettings,
-                    siteRepositoryService,
-                    pageRepositoryService,
-                    lemmaRepositoryService,
-                    indexRepositoryService,
-                    false);
-            executor.execute(indexing);
             siteRepositoryService.save(site);
-            return "true";
+        } else if (site.getStatus().equals(IndexingStatus.INDEXING)) {
+            return "false";
+        } else {
+            site.setStatus(IndexingStatus.INDEXING);
+            site.setStatusTime(LocalDateTime.now());
+            siteRepositoryService.save(site);
         }
+
+        // Шаг 3: Запуск индексации страницы
+        SiteIndexing indexing = new SiteIndexing(
+                site,
+                searchSettings,
+                siteRepositoryService,
+                pageRepositoryService,
+                lemmaRepositoryService,
+                indexRepositoryService,
+                false,
+                url);
+        executor.execute(indexing);
+        return "true";
     }
 
+    private String getBaseUrlFromConfig(String url) {
+        for (HashMap<String, String> siteMap : searchSettings.getSites()) {
+            String siteUrl = siteMap.get("url");
+            if (url.startsWith(siteUrl) || url.startsWith(siteUrl.replace("www.", ""))) {
+                return siteUrl;
+            }
+        }
+        return null;
+    }
+
+    // Метод для получения имени сайта из конфигурации
+    private String getSiteNameFromConfig(String baseUrl) {
+        for (HashMap<String, String> siteMap : searchSettings.getSites()) {
+            if (siteMap.get("url").equals(baseUrl) || siteMap.get("url").equals(baseUrl.replace("www.", ""))) {
+                return siteMap.get("name");
+            }
+        }
+        return null;
+    }
 }
+
+
+
+
+
+
+//        List<Site> sitesInRepository = siteRepositoryService.getAllSites();
+//        String baseUrl = "";
+//        for (Site site : sitesInConfig) {
+//            String siteUrl = site.getUrl();
+//            if (url.startsWith(siteUrl) || url.startsWith(siteUrl.replace("www.", ""))) {
+//                baseUrl = siteUrl;
+//                break;
+//            }
+//        }
+//        if (baseUrl.isEmpty()) {
+//            return "not found";
+//        } else {
+//            Site site = siteRepositoryService.getSite(baseUrl);
+//            if (site == null) {
+//                return "site not found";
+//            }
+//                        siteRepositoryService.save(site);
+//                        site.setStatus(IndexingStatus.INDEXING);
+//                        site.setStatusTime(LocalDateTime.now());
+//                        SiteIndexing indexing = new SiteIndexing(
+//                                site,
+//                                searchSettings,
+//                                siteRepositoryService,
+//                                pageRepositoryService,
+//                                lemmaRepositoryService,
+//                                indexRepositoryService,
+//                                false);
+//                        executor.execute(indexing);
+//                        siteRepositoryService.save(site);
+//                        return "true";
+//                    }
+//        }
+
+
+//        List<Site> siteList = siteRepositoryService.getAllSites();
+//        String baseUrl = "";
+//        for (Site site : siteList) {
+//            String siteUrl = site.getUrl();
+//            if (url.startsWith(siteUrl) || url.startsWith(siteUrl.replace("www.", ""))) {
+//                baseUrl = siteUrl;
+//                break;
+//            }
+//        }
+//        if (baseUrl.isEmpty()) {
+//            return "not found";
+//        } else {
+//            Site site = siteRepositoryService.getSite(baseUrl);
+//            if (site == null) {
+//                return "site not found";
+//            }
+//            site.setStatus(IndexingStatus.INDEXING);
+//            site.setStatusTime(LocalDateTime.now());
+//            SiteIndexing indexing = new SiteIndexing(
+//                    site,
+//                    searchSettings,
+//                    siteRepositoryService,
+//                    pageRepositoryService,
+//                    lemmaRepositoryService,
+//                    indexRepositoryService,
+//                    false);
+//            executor.execute(indexing);
+//            siteRepositoryService.save(site);
+//            return "true";
+//        }
+//    }
+
+
+
+
+

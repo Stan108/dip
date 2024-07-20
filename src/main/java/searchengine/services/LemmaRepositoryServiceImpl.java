@@ -58,6 +58,26 @@ public class LemmaRepositoryServiceImpl implements LemmaRepositoryService{
     public void deleteAll() {
         lemmaRepository.deleteAll();
     }
+
+    @Override
+    public void deleteLemma(Lemma lemma) {
+        lemmaRepository.delete(lemma);
+    }
+
+    public Lemma getOrCreateLemma(String lemmaName, int siteId) {
+        List<Lemma> existingLemmas = getLemma(lemmaName);
+        Lemma lemma;
+        if (existingLemmas.isEmpty()) {
+            lemma = new Lemma(lemmaName, 1, siteId);
+            save(lemma);
+        } else {
+            lemma = existingLemmas.get(0);
+        }
+        return lemma;
+    }
+
+
+
 }
 //    private final LemmaRepository lemmaRepository;
 //    @Override

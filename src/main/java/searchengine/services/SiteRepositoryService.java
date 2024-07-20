@@ -12,7 +12,7 @@ public interface SiteRepositoryService {
     void save(Site site);
     long siteCount();
     List<Site> getAllSites();
-
+    Site findByUrl(String url);
     void deleteByUrl(String url);
     void deleteAll();
 

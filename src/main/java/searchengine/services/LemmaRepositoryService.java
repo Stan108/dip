@@ -15,6 +15,7 @@ public interface LemmaRepositoryService {
     void deleteAllLemmas(List<Lemma> lemmaList);
     List<Lemma> findLemmasByIndexing(List<Index> indexingList);
     void deleteAll();
+    void deleteLemma(Lemma lemma);
 }
 
 //    List<Lemma> getLemma (String lemmaName);

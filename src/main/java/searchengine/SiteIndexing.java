@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 @RequiredArgsConstructor
-public class SiteIndexing extends Thread{
+public class SiteIndexing extends Thread {
 
     private final Site site;
     private final SearchSettings searchSettings;
@@ -30,23 +30,37 @@ public class SiteIndexing extends Thread{
     private final LemmaRepositoryService lemmaRepositoryService;
     private final IndexRepositoryService indexRepositoryService;
     private final boolean allSite;
+    private String pageUrl;
     Log log = LogFactory.getLog(Index.class);
 
+    public SiteIndexing(Site site, SearchSettings searchSettings, SiteRepositoryService siteRepositoryService,
+                        PageRepositoryService pageRepositoryService, LemmaRepositoryService lemmaRepositoryService,
+                        IndexRepositoryService indexRepositoryService, boolean allSite, String pageUrl) {
+        this.site = site;
+        this.searchSettings = searchSettings;
+        this.siteRepositoryService = siteRepositoryService;
+        this.pageRepositoryService = pageRepositoryService;
+        this.lemmaRepositoryService = lemmaRepositoryService;
+        this.indexRepositoryService = indexRepositoryService;
+        this.allSite = allSite;
+        this.pageUrl = pageUrl;
+    }
+
     public void run() {
-       try {
-           if (allSite) {
-               runAllIndexing();
-           } else {
-               runOneSiteIndexing(site.getUrl());
-           }
-       } catch (Exception e) {
-           log.error("Ошибка индексации сайта", e);
-       }
+        try {
+            if (allSite) {
+                runAllIndexing();
+            } else {
+                runOneSiteIndexing(pageUrl);
+            }
+        } catch (Exception e) {
+            log.error("Ошибка индексации сайта", e);
+        }
     }
 
     private void runAllIndexing() {
-        site.setStatus(IndexingStatus.INDEXING);
         log.info("запуск индексации всех сайтов");
+        site.setStatus(IndexingStatus.INDEXING);
         site.setStatusTime(LocalDateTime.now());
         siteRepositoryService.save(site);
         SiteMapBuilder builder = new SiteMapBuilder(site.getUrl(), this.isInterrupted());
@@ -55,22 +69,30 @@ public class SiteIndexing extends Thread{
         allSiteUrls.forEach(this::runOneSiteIndexing);
     }
 
-
-    private void runOneSiteIndexing(String searchUrl) {
-        log.info("запуск метода индексации одного сайта");
+    private void runOneSiteIndexing(String pageUrl) {
+        log.info("запуск метода индексации одной страницы");
         site.setStatus(IndexingStatus.INDEXING);
         site.setStatusTime(LocalDateTime.now());
         siteRepositoryService.save(site);
         try {
-            Page page = getSearchPage(searchUrl, site.getUrl(), site.getId());
-            Page checkPage = pageRepositoryService.getPage(searchUrl.replaceAll(site.getUrl(), ""));
-            if (checkPage != null){
-                prepareDbToIndexing(checkPage);
+            // Проверяем, существует ли уже страница в базе данных
+            Page page = pageRepositoryService.getPage(pageUrl.replace(site.getUrl(), ""));
+            if (page != null) {
+                prepareDbToIndexing(page);
             }
+            // Получаем HTML-код страницы и создаем объект Page
+            page = getSearchPage(pageUrl, site.getUrl(), site.getId());
             pageRepositoryService.save(page);
+
+            // Обрабатываем страницу
             processPage(page);
+
+            // Привязываем страницу к сайту
+            page.setSite(site);
+            page.setPath(pageUrl.replace(site.getUrl(), ""));
+            pageRepositoryService.save(page);
         } catch (IOException e) {
-            site.setLastError("Ошибка чтения странцы: " + searchUrl + "\n" + e.getMessage());
+            site.setLastError("Ошибка чтения страницы: " + pageUrl + "\n" + e.getMessage());
             site.setStatus(IndexingStatus.FAILED);
         } finally {
             siteRepositoryService.save(site);
@@ -78,7 +100,6 @@ public class SiteIndexing extends Thread{
         site.setStatus(IndexingStatus.INDEXED);
         siteRepositoryService.save(site);
     }
-
 
 
     private Page getSearchPage(String url, String baseUrl, int siteId) throws IOException {
@@ -90,12 +111,13 @@ public class SiteIndexing extends Thread{
         String content = response.body();
         String path = url.replaceAll(baseUrl, "");
         int code = response.statusCode();
-            page.setCode(code);
-            page.setPath(path);
-            page.setContent(content);
-            page.setSiteId(siteId);
+        page.setCode(code);
+        page.setPath(path);
+        page.setContent(content);
+        page.setSiteId(siteId);
         return page;
     }
+
     private void processPage(Page page) throws IOException {
         String content = page.getContent();
         LemmaFinder analyzer = LemmaFinder.getInstance();
@@ -113,15 +135,15 @@ public class SiteIndexing extends Thread{
                 lemma = existingLemmas.get(0);
                 lemma.setFrequency(lemma.getFrequency() + entry.getValue());
                 lemmaRepositoryService.save(lemma);
-        }
+            }
 
-        // Сохранение индексов
+            // Сохранение индексов
             searchengine.model.Index existingIndex = indexRepositoryService.getIndexing(lemma.getId(), page.getId());
             if (existingIndex == null) {
                 searchengine.model.Index newIndex = new searchengine.model.Index();
                 newIndex.setPage(page);
                 newIndex.setLemma(lemma);
-                newIndex.setRank(Float.valueOf(entry.getValue()));
+                newIndex.setRank((float) entry.getValue());
                 indexRepositoryService.save(newIndex);
             } else {
                 existingIndex.setRank(existingIndex.getRank() + entry.getValue());
@@ -132,9 +154,14 @@ public class SiteIndexing extends Thread{
 
     private void prepareDbToIndexing(Page page) {
         List<searchengine.model.Index> indexingList = indexRepositoryService.getAllIndexingByPageId(page.getId());
+        indexRepositoryService.deleteAllIndexing(indexingList); // Сначала удаляем индексы
         List<Lemma> allLemmasIdByPage = lemmaRepositoryService.findLemmasByIndexing(indexingList);
-        lemmaRepositoryService.deleteAllLemmas(allLemmasIdByPage);
-        indexRepositoryService.deleteAllIndexing(indexingList);
-        pageRepositoryService.deletePage(page);
+        for (Lemma lemma : allLemmasIdByPage) {
+            if (lemma.getFrequency() <= 0) {
+                lemmaRepositoryService.deleteLemma(lemma);
+            }
+        }
+        pageRepositoryService.deletePage(page); // Удаляем страницу
     }
 }
+

@@ -21,6 +21,7 @@ public class SiteRepositoryServiceImpl implements SiteRepositoryService{
             siteRepository.save(site);
         }
         return site;
+
     }
 
     @Override
@@ -45,6 +46,12 @@ public class SiteRepositoryServiceImpl implements SiteRepositoryService{
         siteIterable.forEach(siteList::add);
         return siteList;
     }
+
+    @Override
+    public Site findByUrl(String url) {
+        return siteRepository.findByUrl(url);
+    }
+
 
     @Override
     public void deleteByUrl(String url) {
