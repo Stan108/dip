@@ -11,6 +11,7 @@ import searchengine.dto.statistics.StatisticsData;
 import searchengine.dto.statistics.StatisticsResponse;
 import searchengine.dto.statistics.TotalStatistics;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -29,9 +30,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     private final PageRepositoryService pageRepositoryService;
     @Override
     public StatisticsResponse getStatistics() {
-        if (siteRepositoryService.getAllSites() == null) {
-            System.out.println("There is no sites in the repository");
-        }
+        ensureSitesInitialized();
         TotalStatistics total = new TotalStatistics();
         total.setSites(sites.getSites().size());
         total.setIndexing(true);
@@ -73,4 +72,21 @@ public class StatisticsServiceImpl implements StatisticsService {
         }
         return is;
     }
+    private void ensureSitesInitialized() {
+        List<searchengine.model.Site> sitesFromRepository = new ArrayList<searchengine.model.Site>();
+        sitesFromRepository = siteRepositoryService.getAllSites();
+        List<Site> sitesFromConfig = sites.getSites();
+        if (sitesFromRepository.isEmpty()) {
+            for (Site siteConfig : sitesFromConfig) {
+                searchengine.model.Site site = new searchengine.model.Site();
+                site.setUrl(siteConfig.getUrl());
+                site.setName(siteConfig.getName());
+                site.setStatus(INDEXED);
+                site.setStatusTime(LocalDateTime.now());
+                site.setLastError(null);
+                siteRepositoryService.save(site);
+            }
+        }
+    }
+
 }
