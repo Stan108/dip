@@ -29,7 +29,9 @@ public class StatisticsServiceImpl implements StatisticsService {
     private final PageRepositoryService pageRepositoryService;
     @Override
     public StatisticsResponse getStatistics() {
-
+        if (siteRepositoryService.getAllSites() == null) {
+            System.out.println("There is no sites in the repository");
+        }
         TotalStatistics total = new TotalStatistics();
         total.setSites(sites.getSites().size());
         total.setIndexing(true);
@@ -37,32 +39,22 @@ public class StatisticsServiceImpl implements StatisticsService {
         List<DetailedStatisticsItem> detailed = new ArrayList<>();
         List<Site> sitesList = sites.getSites();
 
-        for(int i = 0; i < sitesList.size(); i++) {
-            Site siteFromConfig = sitesList.get(i);
+        for (Site siteFromConfig : sitesList) {
             searchengine.model.Site site = siteRepositoryService.getSite(siteFromConfig.getUrl());
-
             DetailedStatisticsItem item = new DetailedStatisticsItem();
             item.setName(siteFromConfig.getName());
             item.setUrl(siteFromConfig.getUrl());
-//            int pages = random.nextInt(1_000);
             int pages = (int) pageRepositoryService.pageCount(site.getId());
-//            int lemmas = pages * random.nextInt(1_000);
             int lemmas = lemmaRepositoryService.lemmaCount(site.getId());
             item.setPages(pages);
             item.setLemmas(lemmas);
-//            item.setStatus(statuses[i % 3]);
             item.setStatus(site.getStatus().name());
-//            item.setError(errors[i % 3]);
             item.setError(site.getLastError());
-
-//            item.setStatusTime(System.currentTimeMillis() -
-//                    (random.nextInt(10_000)));
             item.setStatusTime(site.getStatusTime().toString());
             total.setPages((total.getPages() + pages));
             total.setLemmas((total.getLemmas() + lemmas));
             detailed.add(item);
         }
-
         StatisticsResponse response = new StatisticsResponse();
         StatisticsData data = new StatisticsData();
         data.setTotal(total);

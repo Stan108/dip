@@ -1,6 +1,8 @@
 package searchengine.model;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.*;
 
@@ -11,24 +13,36 @@ public class Index {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-    @ManyToOne
+    @Getter
+    @Setter
+//    @ManyToOne
     @JoinColumn(name = "page_id")
-    private Page page;
-    @ManyToOne
+    private int pageId;
+    @Getter
+    @Setter
+//    @ManyToOne
     @JoinColumn(name = "lemma_id")
-    private Lemma lemma;
+    private int lemmaId;
     @Column(name = "`rank`", nullable = false)
     private Float rank;
 
-    public Lemma getLemma() {
-        return lemma;
+    public Index(int pageId, int lemmaId, float ranking) {
+        this.pageId = pageId;
+        this.lemmaId = lemmaId;
+        this.rank = ranking;
     }
 
+    public Index() {
 
+    }
+
+    public void setPageId(int pageId) {
+        this.pageId = pageId;
+    }
     public String toString() {
         return "Index{" +
-                "pageId=" + page.getId() +
-                ", lemmaId=" + lemma.getId() +
+                "pageId=" + pageId +
+                ", lemmaId=" + lemmaId +
                 ", ranking=" + rank +
                 '}';
     }

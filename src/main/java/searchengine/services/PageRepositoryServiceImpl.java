@@ -26,9 +26,8 @@ public class PageRepositoryServiceImpl implements PageRepositoryService{
         return pageRepository.findById(id);
     }
 
-    @Override
     public Optional<Page> findPageByPageIdAndSiteId(int pageId, int siteId) {
-        return findPageByPageIdAndSiteId(pageId, siteId);
+        return pageRepository.findByIdAndSiteId(pageId, siteId);
     }
 
     @Override

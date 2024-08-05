@@ -141,8 +141,8 @@ public class SiteIndexing extends Thread {
             searchengine.model.Index existingIndex = indexRepositoryService.getIndexing(lemma.getId(), page.getId());
             if (existingIndex == null) {
                 searchengine.model.Index newIndex = new searchengine.model.Index();
-                newIndex.setPage(page);
-                newIndex.setLemma(lemma);
+                newIndex.setPageId(page.getId());
+                newIndex.setLemmaId(lemma.getId());
                 newIndex.setRank((float) entry.getValue());
                 indexRepositoryService.save(newIndex);
             } else {

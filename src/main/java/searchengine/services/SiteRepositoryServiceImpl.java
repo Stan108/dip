@@ -6,6 +6,7 @@ import searchengine.model.IndexingStatus;
 import searchengine.model.Site;
 import searchengine.repo.SiteRepository;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 @Service
@@ -18,6 +19,9 @@ public class SiteRepositoryServiceImpl implements SiteRepositoryService{
         Site site = siteRepository.findByUrl(url);
         if(site == null){
             site = new Site(url);
+            siteRepository.save(site);
+            site.setStatus(IndexingStatus.INDEXING); // Пример установки статуса, если требуется
+            site.setStatusTime(LocalDateTime.now()); // Установка текущего времени
             siteRepository.save(site);
         }
         return site;

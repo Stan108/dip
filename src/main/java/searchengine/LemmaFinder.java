@@ -21,8 +21,6 @@ public class LemmaFinder {
         for (Map.Entry<String, Integer> entry : lemmas.entrySet()) {
             System.out.println(entry.getKey() + ": " + entry.getValue());
         }
-
-        System.out.println("\nУникальные леммы:");
         Set<String> lemmaSet = lemmaFinder.getLemmaSet(text);
         for (String lemma : lemmaSet) {
             System.out.println(lemma);
@@ -94,7 +92,27 @@ public class LemmaFinder {
         }
         return false;
     }
+    public ArrayList<Integer> findLemmaIndexInText(String text, String lemma) {
+        ArrayList<Integer> listOfIndexes = new ArrayList<>();
+        String[] list = text.split("[—]|\\p{Punct}|\\s");
+        int index = 0;
+        for(String s1 : list) {
+            List<String> lemmas = new ArrayList<>();
+            try {
+                lemmas = luceneMorphology.getNormalForms(s1.toLowerCase(Locale.ROOT));
 
+            } catch (Exception e) {
+                log.debug("Ошибка морфологического анализа. Пропущенные символы: " + s1);
+            }
+            for(String s2 : lemmas) {
+                if (s2.equals(lemma)){
+                    listOfIndexes.add(index);
+                }
+            }
+            index += s1.length() + 1;
+        }
+        return listOfIndexes;
+    }
     public Set<String> getLemmaSet(String text) {
         text = removeHtmlTags(text);
         String[] textArray = arrayContainsRussianWords(text);
