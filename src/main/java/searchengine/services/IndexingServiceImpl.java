@@ -15,9 +15,6 @@ public class IndexingServiceImpl implements IndexingService{
     private final Index index;
     private final Log log = LogFactory.getLog(IndexingServiceImpl.class);
 
-
-
-
     @Override
     public ResponseService startIndexingAll() {
         log.info("Попытка запуска индексации всех сайтов");
@@ -51,7 +48,6 @@ public class IndexingServiceImpl implements IndexingService{
             response = new FalseResponseService("индексация не запущена");
             log.warn("Остановка индексаии не может быть выполнена, так как индексация не запущена");
         }
-
         return null;
     }
 

@@ -5,9 +5,7 @@ import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,13 +54,9 @@ public class ParseUrl extends RecursiveTask<String> {
                     result.append(text);
                 }
             }
-
-
         } catch (InterruptedException | IOException e) {
             log.warn("Ошибка парсинга сайта: " + url);
         }
-
-
         return result.toString();
     }
 

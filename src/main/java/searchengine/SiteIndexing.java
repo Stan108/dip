@@ -2,7 +2,6 @@ package searchengine;
 import lombok.RequiredArgsConstructor;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
-import org.apache.lucene.morphology.analyzer.MorphologyAnalyzer;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import searchengine.model.IndexingStatus;
@@ -75,19 +74,13 @@ public class SiteIndexing extends Thread {
         site.setStatusTime(LocalDateTime.now());
         siteRepositoryService.save(site);
         try {
-            // Проверяем, существует ли уже страница в базе данных
             Page page = pageRepositoryService.getPage(pageUrl.replace(site.getUrl(), ""));
             if (page != null) {
                 prepareDbToIndexing(page);
             }
-            // Получаем HTML-код страницы и создаем объект Page
             page = getSearchPage(pageUrl, site.getUrl(), site.getId());
             pageRepositoryService.save(page);
-
-            // Обрабатываем страницу
             processPage(page);
-
-            // Привязываем страницу к сайту
             page.setSite(site);
             page.setPath(pageUrl.replace(site.getUrl(), ""));
             pageRepositoryService.save(page);
@@ -122,8 +115,6 @@ public class SiteIndexing extends Thread {
         String content = page.getContent();
         LemmaFinder analyzer = LemmaFinder.getInstance();
         Map<String, Integer> lemmas = analyzer.collectLemmas(content);
-
-        // Сохранение лемм и обновление частоты
         for (Map.Entry<String, Integer> entry : lemmas.entrySet()) {
             String lemmaName = entry.getKey();
             List<Lemma> existingLemmas = lemmaRepositoryService.getLemma(lemmaName);
@@ -136,8 +127,6 @@ public class SiteIndexing extends Thread {
                 lemma.setFrequency(lemma.getFrequency() + entry.getValue());
                 lemmaRepositoryService.save(lemma);
             }
-
-            // Сохранение индексов
             searchengine.model.Index existingIndex = indexRepositoryService.getIndexing(lemma.getId(), page.getId());
             if (existingIndex == null) {
                 searchengine.model.Index newIndex = new searchengine.model.Index();
@@ -161,7 +150,7 @@ public class SiteIndexing extends Thread {
                 lemmaRepositoryService.deleteLemma(lemma);
             }
         }
-        pageRepositoryService.deletePage(page); // Удаляем страницу
+        pageRepositoryService.deletePage(page);
     }
 }
 

@@ -1,23 +1,17 @@
 package searchengine.model;
 
 
+import lombok.Getter;
 import searchengine.LemmaFinder;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter
 public class Request {
 
-    private String req;
-    private List<String> reqLemmas;
-
-    public List<String> getReqLemmas() {
-        return reqLemmas;
-    }
-
-    public String getReq() {
-        return req;
-    }
+    private final String req;
+    private final List<String> reqLemmas;
 
     public Request(String req){
         this.req = req;

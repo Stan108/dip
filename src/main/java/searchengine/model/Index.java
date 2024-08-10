@@ -13,14 +13,10 @@ public class Index {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-    @Getter
-    @Setter
-//    @ManyToOne
+
     @JoinColumn(name = "page_id")
     private int pageId;
-    @Getter
-    @Setter
-//    @ManyToOne
+
     @JoinColumn(name = "lemma_id")
     private int lemmaId;
     @Column(name = "`rank`", nullable = false)
@@ -33,12 +29,9 @@ public class Index {
     }
 
     public Index() {
-
     }
 
-    public void setPageId(int pageId) {
-        this.pageId = pageId;
-    }
+    @Override
     public String toString() {
         return "Index{" +
                 "pageId=" + pageId +

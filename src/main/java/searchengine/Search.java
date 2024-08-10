@@ -1,9 +1,5 @@
 package searchengine;
-
-
-import org.apache.lucene.morphology.LuceneMorphology;
-import org.apache.lucene.morphology.analyzer.MorphologyAnalyzer;
-import org.apache.lucene.morphology.russian.RussianLuceneMorphology;
+import lombok.RequiredArgsConstructor;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
@@ -15,7 +11,6 @@ import searchengine.model.Request;
 import searchengine.model.Site;
 import searchengine.responces.SearchResponseService;
 import searchengine.services.*;
-
 import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -23,22 +18,13 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 @Service
+@RequiredArgsConstructor
 public class Search {
 
     private final SiteRepositoryService siteRepositoryService;
     private final IndexRepositoryService indexRepositoryService;
     private final PageRepositoryService pageRepositoryService;
     private final LemmaRepositoryService lemmaRepositoryService;
-
-    public Search(SiteRepositoryService siteRepositoryService,
-                  IndexRepositoryService indexRepositoryService,
-                  PageRepositoryService pageRepositoryService,
-                  LemmaRepositoryService lemmaRepositoryService) {
-        this.siteRepositoryService = siteRepositoryService;
-        this.indexRepositoryService = indexRepositoryService;
-        this.pageRepositoryService = pageRepositoryService;
-        this.lemmaRepositoryService = lemmaRepositoryService;
-    }
 
     public SearchResponseService searchService (Request request, String url, int offset, int limit) throws IOException {
         List<Site> siteList = siteRepositoryService.getAllSites();
@@ -176,7 +162,6 @@ public class Search {
     }
 
     private String getSnippet (String html, Request request) throws IOException {
-//        MorphologyAnalyzer analyzer = new MorphologyAnalyzer();
 
         LemmaFinder.getInstance();
 

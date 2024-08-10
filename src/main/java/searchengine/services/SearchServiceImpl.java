@@ -1,6 +1,7 @@
 package searchengine.services;
 
 
+import lombok.RequiredArgsConstructor;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.springframework.stereotype.Service;
@@ -12,15 +13,12 @@ import searchengine.responces.ResponseService;
 import java.io.IOException;
 
 @Service
+@RequiredArgsConstructor
 public class SearchServiceImpl implements SearchService {
 
     private static final Log log = LogFactory.getLog(SearchServiceImpl.class);
 
     private final Search search;
-
-    public SearchServiceImpl(Search search) {
-        this.search = search;
-    }
 
     ResponseService response;
 

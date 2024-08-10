@@ -11,7 +11,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class LemmaRepositoryServiceImpl implements LemmaRepositoryService{
     private final LemmaRepository lemmaRepository;
-
     @Override
     public List<Lemma> getLemma(String lemmaName) {
         List<Lemma> lemmas = null;
@@ -23,128 +22,36 @@ public class LemmaRepositoryServiceImpl implements LemmaRepositoryService{
         }
         return lemmas;
     }
-
     @Override
     public void save(Lemma lemma) {
         lemmaRepository.save(lemma);
     }
-
     @Override
     public long lemmaCount() {
         return lemmaRepository.count();
     }
-
     @Override
     public int lemmaCount(int siteId) {
         return lemmaRepository.countBySiteId(siteId);
     }
-
     @Override
     public void deleteAllLemmas(List<Lemma> lemmaList) {
         lemmaRepository.deleteAll();
     }
-
     @Override
     public List<Lemma> findLemmasByIndexing(List<Index> indexingList) {
         int[] lemmaIdList = new int[indexingList.size()];
         for (int i = 0; i < indexingList.size(); i++) {
             lemmaIdList[i] = indexingList.get(i).getId();
         }
-
         return lemmaRepository.findByIdIn(lemmaIdList);
     }
-
     @Override
     public void deleteAll() {
         lemmaRepository.deleteAll();
     }
-
     @Override
     public void deleteLemma(Lemma lemma) {
         lemmaRepository.delete(lemma);
     }
-
-    public Lemma getOrCreateLemma(String lemmaName, int siteId) {
-        List<Lemma> existingLemmas = getLemma(lemmaName);
-        Lemma lemma;
-        if (existingLemmas.isEmpty()) {
-            lemma = new Lemma(lemmaName, 1, siteId);
-            save(lemma);
-        } else {
-            lemma = existingLemmas.get(0);
-        }
-        return lemma;
-    }
-
-
-
 }
-//    private final LemmaRepository lemmaRepository;
-//    @Override
-//    public List<Lemma> getLemma(String lemmaName) {
-//        List<Lemma> lemmas = null;
-//        lemmas = lemmaRepository.findByLemma(lemmaName);
-//        System.out.println(lemmaName);
-//        return lemmas;
-//    }
-//
-//    @Override
-//    public void save(Lemma lemma) {
-//        lemmaRepository.save(lemma);
-//    }
-//
-//    @Override
-//    public long lemmaCount() {
-//        return lemmaRepository.count();
-//    }
-//
-//    @Override
-//    public long lemmaCount(long siteId) {
-//        return lemmaRepository.count(siteId);
-//    }
-//
-//    @Override
-//    public void deleteAllLemmas(List<Lemma> lemmaList) {
-//        lemmaRepository.deleteAll();
-//    }
-//
-//    @Override
-//    public List<Lemma> findLemmasByIndexing(List<Index> indexingList) {
-//        int[] lemmaIdList = indexingList.stream().mapToInt(Index::getLemmaId).toArray();
-//        return lemmaRepository.findById(lemmaIdList);
-//    }
-
-//private final LemmaRepository lemmaRepository;
-//
-//@Override
-//public List<Lemma> getLemma(String lemmaName) {
-//    List<Lemma> lemmas = lemmaRepository.findByLemma(lemmaName);
-//    System.out.println(lemmaName);
-//    return lemmas;
-//}
-//
-//@Override
-//public void save(Lemma lemma) {
-//    lemmaRepository.save(lemma);
-//}
-//
-//@Override
-//public long lemmaCount() {
-//    return lemmaRepository.count();
-//}
-//
-//@Override
-//public long lemmaCount(long siteId) {
-//    return lemmaRepository.countBySiteId(siteId);
-//}
-//
-//@Override
-//public void deleteAllLemmas(List<Lemma> lemmaList) {
-//    lemmaRepository.deleteAll(lemmaList);
-//}
-//
-//@Override
-//public List<Lemma> findLemmasByIndexing(List<Index> indexingList) {
-//    int[] lemmaIdList = indexingList.stream().mapToInt(index -> index.getLemma().getId()).toArray();
-//    return lemmaRepository.findByIdIn(lemmaIdList);
-//}

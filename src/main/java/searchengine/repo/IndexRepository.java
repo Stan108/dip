@@ -16,9 +16,5 @@ public interface IndexRepository extends CrudRepository<Index, Integer> {
     List<Index> findByLemmaId (int lemmaId);
     List<Index> findByPageId (int pageId);
     Index findByLemmaIdAndPageId (int lemmaId, int pageId);
-//    @Modifying
-//    @Transactional
-//    @Query("DELETE FROM Index i WHERE i.page.id = :pageId")
-//    void deleteByPageId(@Param("pageId") int pageId);
 }
 

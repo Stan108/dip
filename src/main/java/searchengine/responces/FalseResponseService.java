@@ -11,5 +11,4 @@ public class FalseResponseService implements ResponseService {
     public boolean getResult() {
         return false;
     }
-
 }

@@ -18,9 +18,3 @@ public interface LemmaRepositoryService {
     void deleteLemma(Lemma lemma);
 }
 
-//    List<Lemma> getLemma (String lemmaName);
-//    void save(Lemma lemma);
-//    long lemmaCount();
-//    long lemmaCount(long siteId);
-//    void deleteAllLemmas(List<Lemma> lemmaList);
-//    List<Lemma> findLemmasByIndexing(List<Index> indexingList);

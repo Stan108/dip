@@ -19,9 +19,9 @@ public class Site {
     private LocalDateTime statusTime;
     @Column(columnDefinition = "TEXT")
     private String lastError;
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false)
     private String url;
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false)
     private String name;
     @OneToMany(mappedBy="site")
     private List<Page> pages;

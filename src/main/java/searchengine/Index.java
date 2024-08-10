@@ -6,12 +6,7 @@ import org.apache.juli.logging.LogFactory;
 import org.springframework.stereotype.Component;
 import searchengine.model.IndexingStatus;
 import searchengine.model.Site;
-import searchengine.repo.SiteRepository;
-import searchengine.responces.FalseResponseService;
-import searchengine.responces.ResponseService;
-import searchengine.responces.TrueResponseService;
 import searchengine.services.*;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,7 +15,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import static searchengine.model.IndexingStatus.INDEXED;
+
 
 @Component
 @RequiredArgsConstructor
@@ -121,7 +116,6 @@ public class Index {
 
         Site site = siteRepositoryService.findByUrl(baseUrl);
         if (site == null) {
-            // Создаем новую запись для сайта
             site = new Site();
             site.setUrl(baseUrl);
             site.setName(getSiteNameFromConfig(baseUrl));
@@ -135,8 +129,6 @@ public class Index {
             site.setStatusTime(LocalDateTime.now());
             siteRepositoryService.save(site);
         }
-
-        // Шаг 3: Запуск индексации страницы
         SiteIndexing indexing = new SiteIndexing(
                 site,
                 searchSettings,
@@ -159,8 +151,6 @@ public class Index {
         }
         return null;
     }
-
-    // Метод для получения имени сайта из конфигурации
     private String getSiteNameFromConfig(String baseUrl) {
         for (HashMap<String, String> siteMap : searchSettings.getSites()) {
             if (siteMap.get("url").equals(baseUrl) || siteMap.get("url").equals(baseUrl.replace("www.", ""))) {
@@ -171,76 +161,6 @@ public class Index {
     }
 }
 
-
-
-
-
-
-//        List<Site> sitesInRepository = siteRepositoryService.getAllSites();
-//        String baseUrl = "";
-//        for (Site site : sitesInConfig) {
-//            String siteUrl = site.getUrl();
-//            if (url.startsWith(siteUrl) || url.startsWith(siteUrl.replace("www.", ""))) {
-//                baseUrl = siteUrl;
-//                break;
-//            }
-//        }
-//        if (baseUrl.isEmpty()) {
-//            return "not found";
-//        } else {
-//            Site site = siteRepositoryService.getSite(baseUrl);
-//            if (site == null) {
-//                return "site not found";
-//            }
-//                        siteRepositoryService.save(site);
-//                        site.setStatus(IndexingStatus.INDEXING);
-//                        site.setStatusTime(LocalDateTime.now());
-//                        SiteIndexing indexing = new SiteIndexing(
-//                                site,
-//                                searchSettings,
-//                                siteRepositoryService,
-//                                pageRepositoryService,
-//                                lemmaRepositoryService,
-//                                indexRepositoryService,
-//                                false);
-//                        executor.execute(indexing);
-//                        siteRepositoryService.save(site);
-//                        return "true";
-//                    }
-//        }
-
-
-//        List<Site> siteList = siteRepositoryService.getAllSites();
-//        String baseUrl = "";
-//        for (Site site : siteList) {
-//            String siteUrl = site.getUrl();
-//            if (url.startsWith(siteUrl) || url.startsWith(siteUrl.replace("www.", ""))) {
-//                baseUrl = siteUrl;
-//                break;
-//            }
-//        }
-//        if (baseUrl.isEmpty()) {
-//            return "not found";
-//        } else {
-//            Site site = siteRepositoryService.getSite(baseUrl);
-//            if (site == null) {
-//                return "site not found";
-//            }
-//            site.setStatus(IndexingStatus.INDEXING);
-//            site.setStatusTime(LocalDateTime.now());
-//            SiteIndexing indexing = new SiteIndexing(
-//                    site,
-//                    searchSettings,
-//                    siteRepositoryService,
-//                    pageRepositoryService,
-//                    lemmaRepositoryService,
-//                    indexRepositoryService,
-//                    false);
-//            executor.execute(indexing);
-//            siteRepositoryService.save(site);
-//            return "true";
-//        }
-//    }
 
 
 

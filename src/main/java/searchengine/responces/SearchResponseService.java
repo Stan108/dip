@@ -1,11 +1,16 @@
 package searchengine.responces;
 
 
+import lombok.Getter;
+import lombok.Setter;
 import searchengine.services.SearchData;
 
+@Setter
 public class SearchResponseService implements ResponseService {
     private boolean result;
+    @Getter
     private int count;
+    @Getter
     private SearchData[] data;
 
     public SearchResponseService() {
@@ -25,23 +30,4 @@ public class SearchResponseService implements ResponseService {
         return result;
     }
 
-    public void setResult(boolean result) {
-        this.result = result;
-    }
-
-    public int getCount() {
-        return count;
-    }
-
-    public void setCount(int count) {
-        this.count = count;
-    }
-
-    public SearchData[] getData() {
-        return data;
-    }
-
-    public void setData(SearchData[] data) {
-        this.data = data;
-    }
 }
