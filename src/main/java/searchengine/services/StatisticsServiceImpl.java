@@ -63,16 +63,7 @@ public class StatisticsServiceImpl implements StatisticsService {
         response.setResult(true);
         return response;
     }
-    private boolean isSitesIndexing(){
-        boolean is = true;
-        for(searchengine.model.Site s : siteRepositoryService.getAllSites()){
-            if(!s.getStatus().equals(INDEXED)){
-                is = false;
-                break;
-            }
-        }
-        return is;
-    }
+
     private void ensureSitesInitialized() {
         List<searchengine.model.Site> sitesFromRepository = new ArrayList<searchengine.model.Site>();
         sitesFromRepository = siteRepositoryService.getAllSites();
