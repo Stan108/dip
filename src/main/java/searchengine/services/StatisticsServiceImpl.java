@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import static searchengine.model.IndexingStatus.FAILED;
 import static searchengine.model.IndexingStatus.INDEXED;
 
 @Service
@@ -81,7 +82,7 @@ public class StatisticsServiceImpl implements StatisticsService {
                 searchengine.model.Site site = new searchengine.model.Site();
                 site.setUrl(siteConfig.getUrl());
                 site.setName(siteConfig.getName());
-                site.setStatus(INDEXED);
+                site.setStatus(FAILED);
                 site.setStatusTime(LocalDateTime.now());
                 site.setLastError(null);
                 siteRepositoryService.save(site);
